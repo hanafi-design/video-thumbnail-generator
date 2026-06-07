@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+
+    <title>
+        Video Thumbnail Generator
+    </title>
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+</head>
+
+<body class="bg-light">
+
+<div class="container py-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-8">
+
+            <div class="card shadow border-0">
+
+                <div class="card-header text-center py-4">
+
+                    <h2 class="mb-2">
+                        🎬 Video Thumbnail Generator
+                    </h2>
+
+                    <p class="text-muted mb-0">
+                        Generate thumbnail dari video lokal,
+                        YouTube, atau Google Drive.
+                    </p>
+
+                </div>
+
+                <div class="card-body p-4">
+
+                    <form
+                        id="uploadForm"
+                        action="/upload"
+                        method="post"
+                        enctype="multipart/form-data">
+
+                        <!-- Upload Lokal -->
+
+                        <div class="mb-4">
+
+                            <label class="form-label fw-semibold">
+
+                                Upload Video Lokal
+
+                            </label>
+
+                            <input
+                                type="file"
+                                name="video"
+                                id="videoInput"
+                                class="form-control"
+                                accept="video/*">
+
+                            <div class="form-text">
+                                MP4, MOV, AVI, MKV
+                            </div>
+
+                        </div>
+
+                        <!-- URL Video -->
+
+                        <div class="mb-4">
+
+                            <label class="form-label fw-semibold">
+
+                                Atau URL Video
+
+                            </label>
+
+                            <input
+                                type="text"
+                                name="video_url"
+                                class="form-control"
+                                placeholder="https://youtube.com/... atau Google Drive">
+
+                            <div class="form-text">
+                                Mendukung YouTube dan Google Drive.
+                            </div>
+
+                        </div>
+
+                        <!-- Preview Video -->
+
+                        <div class="mb-4">
+
+                            <video
+                                id="videoPreview"
+                                class="w-100 rounded shadow"
+                                controls
+                                style="display:none; max-height:500px;">
+
+                            </video>
+
+                        </div>
+
+                        <!-- Informasi Video -->
+
+                        <div
+                            id="videoInfo"
+                            class="alert alert-secondary"
+                            style="display:none;">
+
+                            <div>
+                                <strong>Nama File:</strong>
+                                <span id="fileName"></span>
+                            </div>
+
+                            <div>
+                                <strong>Ukuran File:</strong>
+                                <span id="fileSize"></span>
+                            </div>
+
+                            <div>
+                                <strong>Durasi:</strong>
+                                <span id="videoDuration"></span>
+                            </div>
+
+                        </div>
+
+                        <!-- Interval -->
+
+                        <div class="mb-4">
+
+                            <label class="form-label fw-semibold">
+
+                                Interval Thumbnail
+
+                            </label>
+
+                            <select
+                                class="form-select"
+                                name="interval">
+
+                                <option value="1">
+                                    1 Second
+                                </option>
+
+                                <option value="5" selected>
+                                    5 Seconds
+                                </option>
+
+                                <option value="10">
+                                    10 Seconds
+                                </option>
+
+                                <option value="30">
+                                    30 Seconds
+                                </option>
+
+                                <option value="60">
+                                    1 Minute
+                                </option>
+
+                            </select>
+
+                            <div class="form-text">
+                                Thumbnail akan dibuat setiap interval yang dipilih.
+                            </div>
+
+                        </div>
+
+                        <!-- Submit -->
+
+                        <div class="d-grid">
+
+                            <button
+                                id="submitBtn"
+                                type="submit"
+                                class="btn btn-primary btn-lg">
+
+                                Generate Thumbnail Gallery
+
+                            </button>
+
+                        </div>
+
+                        <!-- Progress Bar -->
+
+                        <div
+                            id="loadingArea"
+                            class="mt-4"
+                            style="display:none;">
+
+                            <p class="mb-2">
+
+                                ⏳ Sedang memproses video...
+
+                            </p>
+
+                            <div class="progress">
+
+                                <div
+                                    id="progressBar"
+                                    class="progress-bar progress-bar-striped progress-bar-animated"
+                                    role="progressbar"
+                                    style="width:0%;">
+
+                                    0%
+
+                                </div>
+
+                            </div>
+
+                            <small class="text-muted">
+
+                                Jangan tutup halaman sampai proses selesai.
+
+                            </small>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+            <!-- Cara Kerja -->
+
+            <div class="card mt-4 border-0 shadow-sm">
+
+                <div class="card-body">
+
+                    <h5>
+                        📌 Cara Kerja
+                    </h5>
+
+                    <ol class="mb-0">
+
+                        <li>
+                            Upload video lokal atau masukkan URL video.
+                        </li>
+
+                        <li>
+                            Jika upload lokal, preview video akan muncul.
+                        </li>
+
+                        <li>
+                            Pilih interval thumbnail.
+                        </li>
+
+                        <li>
+                            Klik Generate Thumbnail Gallery.
+                        </li>
+
+                        <li>
+                            Download thumbnail satu per satu atau ZIP.
+                        </li>
+
+                    </ol>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+const videoInput =
+    document.getElementById("videoInput");
+
+const videoPreview =
+    document.getElementById("videoPreview");
+
+const videoInfo =
+    document.getElementById("videoInfo");
+
+const fileName =
+    document.getElementById("fileName");
+
+const fileSize =
+    document.getElementById("fileSize");
+
+const videoDuration =
+    document.getElementById("videoDuration");
+
+const uploadForm =
+    document.getElementById("uploadForm");
+
+const loadingArea =
+    document.getElementById("loadingArea");
+
+const progressBar =
+    document.getElementById("progressBar");
+
+const submitBtn =
+    document.getElementById("submitBtn");
+
+
+videoInput.addEventListener(
+    "change",
+    function(event)
+    {
+
+        const file =
+            event.target.files[0];
+
+        if (!file)
+        {
+            return;
+        }
+
+        const url =
+            URL.createObjectURL(file);
+
+        videoPreview.src = url;
+
+        videoPreview.style.display =
+            "block";
+
+        fileName.textContent =
+            file.name;
+
+        fileSize.textContent =
+            (
+                file.size /
+                1024 /
+                1024
+            ).toFixed(2)
+            + " MB";
+
+        videoPreview.onloadedmetadata =
+            function()
+            {
+
+                const duration =
+                    Math.floor(
+                        videoPreview.duration
+                    );
+
+                videoDuration.textContent =
+                    duration + " detik";
+
+                videoInfo.style.display =
+                    "block";
+
+            };
+
+    }
+);
+
+
+// ========================
+// Progress Bar
+// ========================
+
+uploadForm.addEventListener(
+    "submit",
+    function()
+    {
+
+        loadingArea.style.display =
+            "block";
+
+        submitBtn.disabled = true;
+
+        submitBtn.innerHTML =
+            "Processing...";
+
+        let progress = 0;
+
+        const timer =
+            setInterval(
+                function()
+                {
+
+                    progress += 4;
+
+                    if (
+                        progress >= 95
+                    )
+                    {
+                        progress = 95;
+                    }
+
+                    progressBar.style.width =
+                        progress + "%";
+
+                    progressBar.innerText =
+                        progress + "%";
+
+                },
+                500
+            );
+
+    }
+);
+
+</script>
+
+</body>
+</html>
