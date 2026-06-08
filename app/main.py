@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request, UploadFile, File, Form
 from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.background import BackgroundTask
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
@@ -25,11 +26,25 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(THUMBNAIL_DIR, exist_ok=True)
 os.makedirs(ZIP_DIR, exist_ok=True)
 
+# Bersihkan file lama saat startup
+for folder in [UPLOAD_DIR, THUMBNAIL_DIR, ZIP_DIR]:
+
+    for item in os.listdir(folder):
+
+        path = os.path.join(folder, item)
+
+        try:
+
+            if os.path.isfile(path):
+                os.remove(path)
+
+        except Exception:
+            pass
+
 templates = Jinja2Templates(
     directory="templates"
 )
 
-# Static thumbnail
 app.mount(
     "/thumbnails",
     StaticFiles(directory=THUMBNAIL_DIR),
@@ -42,9 +57,7 @@ app.mount(
 
 def sanitize_filename(filename: str) -> str:
 
-    filename = os.path.splitext(
-        filename
-    )[0]
+    filename = os.path.splitext(filename)[0]
 
     return re.sub(
         r"[^a-zA-Z0-9_-]",
@@ -72,11 +85,7 @@ def get_video_duration(video_path: str) -> int:
             text=True
         )
 
-        return int(
-            float(
-                result.stdout.strip()
-            )
-        )
+        return int(float(result.stdout.strip()))
 
     except Exception:
 
@@ -94,18 +103,14 @@ def download_youtube_video(url: str) -> str:
         "noplaylist": True
     }
 
-    with yt_dlp.YoutubeDL(
-        ydl_opts
-    ) as ydl:
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
 
         info = ydl.extract_info(
             url,
             download=True
         )
 
-        return ydl.prepare_filename(
-            info
-        )
+        return ydl.prepare_filename(info)
 
 
 def download_drive_video(url: str) -> str:
@@ -227,7 +232,11 @@ async def upload_video(
                 }
             )
 
-        video_filename = video.filename
+        safe_name = sanitize_filename(
+            video.filename
+        )
+
+        video_filename = safe_name + ".mp4"
 
         video_path = os.path.join(
             UPLOAD_DIR,
@@ -339,6 +348,16 @@ async def upload_video(
                 thumbnail_name
             )
 
+    # Hapus video setelah selesai diproses
+
+    try:
+
+        os.remove(video_path)
+
+    except Exception:
+
+        pass
+
     return templates.TemplateResponse(
         request=request,
         name="result.html",
@@ -396,5 +415,9 @@ async def download_zip(
     return FileResponse(
         path=zip_path,
         filename=f"{video_name}.zip",
-        media_type="application/zip"
+        media_type="application/zip",
+        background=BackgroundTask(
+            os.remove,
+            zip_path
+        )
     )
