@@ -1,36 +1,59 @@
 # Video Thumbnail Generator
 
-Aplikasi web untuk menghasilkan thumbnail video secara otomatis menggunakan Python FastAPI dan FFmpeg.
+## Deskripsi
+
+Video Thumbnail Generator adalah aplikasi berbasis FastAPI yang digunakan untuk menghasilkan thumbnail secara otomatis dari video lokal, YouTube, maupun Google Drive menggunakan FFmpeg.
 
 ## Fitur
 
-* Upload video
-* Preview video sebelum upload
-* Generate thumbnail otomatis berdasarkan interval
-* Download thumbnail
+* Upload video lokal
+* Download video dari YouTube
+* Download video dari Google Drive
+* Generate thumbnail berdasarkan interval waktu
 * Download seluruh thumbnail dalam format ZIP
+* UI modern dan responsif
 
 ## Teknologi
 
-* Python 3.14
+* Python
 * FastAPI
-* FFmpeg
+* Jinja2
 * Bootstrap 5
+* FFmpeg
+* yt-dlp
+* gdown
 
 ## Instalasi
 
-Aktifkan virtual environment:
+### Clone Repository
+
+git clone https://github.com/hanafi-design/video-thumbnail-generator.git
+
+### Masuk Folder
+
+cd video-thumbnail-generator
+
+### Buat Virtual Environment
+
+python -m venv venv
+
+### Aktifkan Virtual Environment
 
 venv\Scripts\activate
 
-Install dependency:
+### Install Dependency
 
 pip install -r requirements.txt
 
-Jalankan aplikasi:
+### Jalankan Aplikasi
 
 uvicorn app.main:app --reload
 
-Buka browser:
+### Buka Browser
 
 http://127.0.0.1:8000
+
+## Author
+
+Riski Hanafi
+Politeknik Elektronika Negeri Surabaya
